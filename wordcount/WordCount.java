@@ -44,10 +44,23 @@ public class WordCount {
     // key = 0, value = "hello world"
 
     public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
-      StringTokenizer itr = new StringTokenizer(value.toString().toLowerCase());
-      while (itr.hasMoreTokens()) {
-        word.set(itr.nextToken());
-        context.write(word, one);
+      // StringTokenizer itr = new StringTokenizer(value.toString().toLowerCase());
+      // while (itr.hasMoreTokens()) {
+      // word.set(itr.nextToken());
+      // context.write(word, one);
+      // }
+
+      // Split on multiple delimiters: whitespace, punctuation, and special characters
+      String[] tokens = value.toString().toLowerCase()
+          .replaceAll("[^a-z0-9]", " ") // Replace all non-alphanumeric with spaces
+          .split("\\s+"); // Split on whitespace
+
+      for (String token : tokens) {
+        // Skip empty strings
+        if (token.length() > 0) {
+          word.set(token);
+          context.write(word, one);
+        }
       }
 
       // String[] toks = value.toString().split(" ");
@@ -56,6 +69,7 @@ public class WordCount {
       // System.out.print(tok + ",");
       // }
       // System.out.println();
+
     }
   }
 

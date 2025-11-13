@@ -292,6 +292,7 @@ The above commands sets me ready for execution. Now if I want to test my program
 ​	Or copy to local:
 
 ```bash
+rm -r -d output
 hadoop fs -get wordcount/output ./output
 cat output/part-r-00000 | head -n 50
 ```
