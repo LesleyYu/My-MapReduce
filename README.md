@@ -2,6 +2,8 @@
 
 > A Word Count project in Java that runs on Hadoop MapReduce. A personal usage guidance
 
+
+
 ## Installation
 
 To get a simplist project running, we follow the [official guide](https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-common/SingleCluster.html). The guide default OS is Linux but I am using a Mac. Below are the commands for Mac installation.
@@ -53,7 +55,7 @@ brew link yarn  # Re-link yarn after if you still need it
 
 After I unlinked yarn, I decided to rename the js manager yarn to **js-yarn**. I don't like yarn anyways I prefer npm manager.
 
-##### Add Hadoop path to environment
+#### Step 3. Add Hadoop path to environment
 
 After installing hadoop I used command `[ -d "etc/hadoop" ] && echo "hadoop exist"` to check if my hadoop exists. But it echos nothing. I had to find where it is by `hadoop version` or `brew info hadoop` and decided to add the path to environment by editing `~/.zshrc`.
 
@@ -110,18 +112,22 @@ Once you find where you installed openjdk@11, add that path to Hadoop environmen
     export JAVA_HOME=$(/usr/libexec/java_home -v 11)
     ```
 
-  Alternative:
-  Set it to a specific path by adding something like:
+ 	 Alternative:
+	  Set it to a specific path by adding something like:
 
   ```
   export JAVA_HOME=/Users/lesley/Library/Java/JavaVirtualMachines/ms-11.0.28/Contents/Home
   ```
+
+
 
 ## basic Q&A
 
 ### Why SSH for Hadoop on local machine?
 Even though you're running Hadoop locally on your Mac, Hadoop's architecture was designed for distributed clusters. The Hadoop daemons (like NameNode, DataNode, ResourceManager, etc.) communicate with each other using SSH, even when they're all on the same machine.
 So when you run Hadoop in "pseudo-distributed mode" (single node acting like a cluster), the processes still use SSH to talk to localhost. It's a bit odd, but that's how Hadoop works!
+
+
 
 ## Configuration
 
@@ -159,44 +165,54 @@ However, to avoid having to enter password everytime, we can set up passphrasele
 
 1. Generate an SSH key (if you don't have one):
 
-```bash
-bashssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa
-```
+   ```bash
+   bashssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa
+   ```
 
-This generates a pair of SSH keys (public and private):
-* `ssh-keygen` - Generates SSH keys
-* `-t rsa` - Type of encrytion to use
-* `-P ''` - Set the passphrase to empty string(no password protection on the key)
-* `-f ~/.ssh/id_rsa` - File location to save the key
+   This generates a pair of SSH keys (public and private):
 
-Result: Creates two files:
-~/.ssh/id_rsa - Your private key (keep this secret!)
-~/.ssh/id_rsa.pub - Your public key (safe to share)
+   * `ssh-keygen` - Generates SSH keys
+
+   * `-t rsa` - Type of encrytion to use
+
+   * `-P ''` - Set the passphrase to empty string(no password protection on the key)
+
+   * `-f ~/.ssh/id_rsa` - File location to save the key
+
+
+​		Result: Creates two files:
+​		`~/.ssh/id_rsa` - Your private key (keep this secret!)
+​		`~/.ssh/id_rsa.pub` - Your public key (safe to share)
 
 2. Add your public key to authorized_keys:
 
-```bash
-cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
-```
+   ```bash
+   cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+   ```
 
-* `~/.ssh/id_rsa.pub` - Your public key file
-* `>>` - Append operator (adds to end of file without overwriting)
-* `~/.ssh/authorized_keys` - File that lists which public keys are allowed to log in
+   * `~/.ssh/id_rsa.pub` - Your public key file
 
-Result: Your localhost now trusts your own public key, so when you SSH with your private key, it lets you in without a password
+   * `>>` - Append operator (adds to end of file without overwriting)
+
+   * `~/.ssh/authorized_keys` - File that lists which public keys are allowed to log in
+
+
+​		Result: Your localhost now trusts your own public key, so when you SSH with your private key, it lets you in without a password
 
 
 3. Set correct permissions:
 
-```bash
-bashchmod 0600 ~/.ssh/authorized_keys
-```
+   ```bash
+   bashchmod 0600 ~/.ssh/authorized_keys
+   ```
 
-* `chmod` - Change file permissions command
-* `0600` - Permission code meaning:
-    6 (owner): read + write
-    0 (group): no permissions
-    0 (others): no permissions
+   * `chmod` - Change file permissions command
+
+   * `0600` - Permission code meaning:
+       6 (owner): read + write
+       0 (group): no permissions
+       0 (others): no permissions
+
 
 ### 3. Format hadoop filesystem
 
@@ -205,6 +221,8 @@ cd into `/opt/homebrew/Cellar/hadoop/3.4.2/libexec`, run:
 ```bash
 bin/hdfs namenode -format
 ```
+
+
 
 ## Execution (READ THIS)
 
@@ -216,63 +234,69 @@ The above commands sets me ready for execution. Now if I want to test my program
 > We do not need to SSH to localhost everytime. In configuration, we SSHed so  
 
 1. Start NameNode daemon and DataNode daemon:
-  cd into `/opt/homebrew/Cellar/hadoop/3.4.2/libexec`, run:
+    cd into `/opt/homebrew/Cellar/hadoop/3.4.2/libexec`, run:
+    
+    ```bash
+    sbin/start-dfs.sh
+    ```
 
-  ```bash
-  sbin/start-dfs.sh
-  ```
+​		to check what's running, run `jps`. Following should appear:
 
-    to check what's running, run `jps`. Following should appear:
-
-  ```
-  15348 Jps
-  15237 SecondaryNameNode
-  15093 DataNode
-  14983 NameNode
-  ```
+```
+15348 Jps
+15237 SecondaryNameNode
+15093 DataNode
+14983 NameNode
+```
 
 2. Browse the web interface for the NameNode; by default it is available at: NameNode - http://localhost:9870/
 
+   
+
 3. Make the HDFS directories required to execute MapReduce jobs:
 
-  ```bash
-  bin/hdfs dfs -mkdir -p <my project>
-  ```
+   ```bash
+   bin/hdfs dfs -mkdir -p <my project>
+   ```
 
-    or `hadoop dfs` will also work.
+     or `hadoop dfs` will also work.
 
 4. Compile your WordCount.java
    
     cd to `/Users/lesley/Documents/USC/CSCI572/HW3/MY-MAPREDUCE/wordcount` where I store my java program
-
-  ```bash
-  hadoop com.sun.tools.javac.Main WordCount.java
-  jar cf wc.jar WordCount*.class
-  ```
+    
+    ```bash
+    hadoop com.sun.tools.javac.Main WordCount.java
+    jar cf wc.jar WordCount*.class
+    ```
 
 5. Upload input data
 
-  ```bash
-  hadoop fs -put input /wordcount/input
-  ```
+   ```bash
+   hadoop fs -put input /wordcount/input
+   ```
 
 6. Run your WordCount job
    
-  ```bash
-  hadoop jar wc.jar WordCount /wordcount/input /wordcount/output
-  ```
+   ```bash
+   hadoop jar wc.jar WordCount /wordcount/input /wordcount/output
+   ```
 
 7. View the results
 
-  ```bash
-  hadoop fs -cat /user/lesley/wordcount/output/part-r-00000
-  ```
+   ```bash
+   hadoop fs -cat /user/lesley/wordcount/output/part-r-00000
+   
+   ```
 
-    Or copy to local:
-  ```bash
-  hadoop fs -get /user/lesley/wordcount/output ./output
-  cat output/part-r-00000
-  ```
+​	Or copy to local:
+
+```bash
+hadoop fs -get /user/lesley/wordcount/output ./output
+cat output/part-r-00000
+```
+
+
 
 ### Explanation
 
