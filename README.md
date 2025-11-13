@@ -222,7 +222,7 @@ The above commands sets me ready for execution. Now if I want to test my program
   sbin/start-dfs.sh
   ```
 
-  to check what's running, run `jps`. Following should appear:
+    to check what's running, run `jps`. Following should appear:
 
   ```
   15348 Jps
@@ -239,11 +239,11 @@ The above commands sets me ready for execution. Now if I want to test my program
   bin/hdfs dfs -mkdir -p <my project>
   ```
 
-  or `hadoop dfs` will also work.
+    or `hadoop dfs` will also work.
 
 4. Compile your WordCount.java
    
-  cd to `/Users/lesley/Documents/USC/CSCI572/HW3/MY-MAPREDUCE/wordcount` where I store my java program
+    cd to `/Users/lesley/Documents/USC/CSCI572/HW3/MY-MAPREDUCE/wordcount` where I store my java program
 
   ```bash
   hadoop com.sun.tools.javac.Main WordCount.java
@@ -257,29 +257,31 @@ The above commands sets me ready for execution. Now if I want to test my program
   ```
 
 6. Run your WordCount job
+   
   ```bash
   hadoop jar wc.jar WordCount /wordcount/input /wordcount/output
   ```
 
 7. View the results
-```bash
-hadoop fs -cat /user/lesley/wordcount/output/part-r-00000
-```
 
-Or copy to local:
-```bash
-hadoop fs -get /user/lesley/wordcount/output ./output
-cat output/part-r-00000
-```
+  ```bash
+  hadoop fs -cat /user/lesley/wordcount/output/part-r-00000
+  ```
+
+    Or copy to local:
+  ```bash
+  hadoop fs -get /user/lesley/wordcount/output ./output
+  cat output/part-r-00000
+  ```
 
 ### Explanation
 
-1. My `WordCount.jav`a is local, when I do `hadoop com.sun.tools.javac.Main WordCount.java`, I use the javac tool in hadoop fs?
+1. My `WordCount.java` is local, when I do `hadoop com.sun.tools.javac.Main WordCount.java`, I use the javac tool in hadoop fs?
    
     This uses the Java compiler (javac) that comes with **Hadoop**, but it compiles your local file. It's **NOT** using anything in HDFS. Think of it as:
     * **hadoop** = a wrapper script that sets up the Java classpath
     * **com.sun.tools.javac.Main** = the Java compiler
-    * `**WordCount.java**` = your local file
+    * `WordCount.java` = your local file
     It's equivalent to running javac WordCount.java but with Hadoop's libraries in the classpath.
 
 2. Why do I get compiled `.class` files local under the same directory as my `WordCount.java` file? Shouldn't it be in hadoop fs?
@@ -289,13 +291,13 @@ cat output/part-r-00000
     **Yes.**
 4. When I run `hadoop jar wc.jar WordCount /wordcount/input /wordcount/output`, I am reading local `wc.jar` file and apply it to the files in hadoop fs directory /wordcount/input?
   
-  Now it gets interesting! This command:
+    Now it gets interesting! This command:
 
-  * Reads the local wc.jar file
-  * Uploads it temporarily to the Hadoop cluster
-  * Runs the MapReduce job
-  * Reads input from HDFS: `/wordcount/input`
-  * Writes output to HDFS: `/wordcount/output`
+     * Reads the local wc.jar file
+     * Uploads it temporarily to the Hadoop cluster
+     * Runs the MapReduce job
+     * Reads input from HDFS: `/wordcount/input`
+     * Writes output to HDFS: `/wordcount/output`
 
 #### Visual Summary:
 
