@@ -17,6 +17,10 @@
  * limitations under the License.
  */
 
+import java.lang.System.*;
+import java.util.HashMap;
+import java.util.Map;
+
 import java.io.IOException;
 import java.util.StringTokenizer;
 
@@ -35,56 +39,70 @@ import org.apache.hadoop.util.GenericOptionsParser;
 
 public class WordCount {
 
-  public static class TokenizerMapper
-      extends Mapper<Object, Text, Text, IntWritable> {
+  public static class TokenizerMapper extends Mapper<Object, Text, Text, Text> {
 
-    private final static IntWritable one = new IntWritable(1);
     private Text word = new Text();
-
-    // key = 0, value = "hello world"
+    private Text docIDText = new Text();
 
     public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
-      // StringTokenizer itr = new StringTokenizer(value.toString().toLowerCase());
-      // while (itr.hasMoreTokens()) {
-      // word.set(itr.nextToken());
-      // context.write(word, one);
-      // }
 
-      // Split on multiple delimiters: whitespace, punctuation, and special characters
-      String[] tokens = value.toString().toLowerCase()
+      // Read each document store 'docID' and process its content
+      String[] parts = null;
+      try {
+        String doc = value.toString().toLowerCase();
+
+        // Split by tab to get docID and content
+        parts = doc.split("\t", 2);
+
+        if (parts.length < 2) {
+          throw new IllegalArgumentException("parts.length < 2");
+          // return; // Skip lines without tab delimiter
+        }
+      } catch (IllegalArgumentException e) {
+        System.out.println("File does not have docID.");
+        return; // Exit early if parsing fails
+      }
+
+      String docID = parts[0];
+      String content = parts[1];
+
+      // System.out.println("This is docID: " + docID);
+
+      // Split content on multiple delimiters: whitespace, punctuation and special
+      // characters
+      String[] tokens = content
           .replaceAll("[^a-z0-9]", " ") // Replace all non-alphanumeric with spaces
           .split("\\s+"); // Split on whitespace
 
       for (String token : tokens) {
-        // Skip empty strings
-        if (token.length() > 0) {
+        if (token.length() > 0) { // Skip empty strings
           word.set(token);
-          context.write(word, one);
+          docIDText.set(docID);
+          context.write(word, docIDText);
         }
       }
-
-      // String[] toks = value.toString().split(" ");
-
-      // for (String tok: toks) {
-      // System.out.print(tok + ",");
-      // }
-      // System.out.println();
-
     }
   }
 
-  public static class IntSumReducer
-      extends Reducer<Text, IntWritable, Text, IntWritable> {
-    private IntWritable result = new IntWritable();
+  public static class IntSumReducer extends Reducer<Text, Text, Text, Text> {
+    private Text result = new Text();
 
-    public void reduce(Text key, Iterable<IntWritable> values,
-        Context context) throws IOException, InterruptedException {
-      int sum = 0;
-      for (IntWritable val : values) {
-        sum += val.get();
+    public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+      // Use HashMap to store docID and count pairs
+      HashMap<String, Integer> docIDCountMap = new HashMap<>();
+
+      // Count occurrences of each docID for the current word
+      for (Text val : values) {
+        String docID = val.toString();
+        docIDCountMap.put(docID, docIDCountMap.getOrDefault(docID, 0) + 1);
       }
-      result.set(sum);
-      context.write(key, result);
+
+      // Output each (word, docID:count) pair
+      for (Map.Entry<String, Integer> entry : docIDCountMap.entrySet()) {
+        String output = entry.getKey() + ":" + entry.getValue();
+        result.set(output);
+        context.write(key, result);
+      }
     }
   }
 
@@ -98,15 +116,12 @@ public class WordCount {
     Job job = Job.getInstance(conf, "word count");
     job.setJarByClass(WordCount.class);
     job.setMapperClass(TokenizerMapper.class);
-    job.setCombinerClass(IntSumReducer.class);
+    // Don't set a combiner class - we need all docIDs to reach the reducer for
+    // proper counting
     job.setReducerClass(IntSumReducer.class);
     job.setOutputKeyClass(Text.class);
-    job.setOutputValueClass(IntWritable.class);
-    // for (int i = 0; i < otherArgs.length - 1; ++i) {
-    // FileInputFormat.addInputPath(job, new Path(otherArgs[i]));
-    // }
-    // FileOutputFormat.setOutputPath(job,
-    // new Path(otherArgs[otherArgs.length - 1]));
+    job.setOutputValueClass(Text.class);
+
     FileInputFormat.addInputPath(job, new Path(args[0]));
     FileOutputFormat.setOutputPath(job, new Path(args[1]));
     System.exit(job.waitForCompletion(true) ? 0 : 1);
