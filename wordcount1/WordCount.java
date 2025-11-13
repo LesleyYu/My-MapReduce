@@ -84,11 +84,17 @@ public class WordCount {
     }
   }
 
+  // Shuffle & Sort Phase (automatic by Hadoop):
+  // Groups all values with the same key together
+  // All docIDs for the word "pangs" are grouped together
+  // Result: ("pangs", [5722018301, 5722018301, 5722018496, ...])
+
   public static class IntSumReducer extends Reducer<Text, Text, Text, Text> {
     private Text result = new Text();
 
+    // For each unique key (word), the reducer is called once
     public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-      // Use HashMap to store docID and count pairs
+      // Use HashMap to store docID and count sum
       HashMap<String, Integer> docIDCountMap = new HashMap<>();
 
       // Count occurrences of each docID for the current word
@@ -116,8 +122,11 @@ public class WordCount {
     Job job = Job.getInstance(conf, "word count");
     job.setJarByClass(WordCount.class);
     job.setMapperClass(TokenizerMapper.class);
+
     // Don't set a combiner class - we need all docIDs to reach the reducer for
     // proper counting
+    // job.setCombinerClass(IntSumReducer.class);
+
     job.setReducerClass(IntSumReducer.class);
     job.setOutputKeyClass(Text.class);
     job.setOutputValueClass(Text.class);
