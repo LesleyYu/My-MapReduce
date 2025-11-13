@@ -251,8 +251,6 @@ The above commands sets me ready for execution. Now if I want to test my program
 
 2. Browse the web interface for the NameNode; by default it is available at: NameNode - http://localhost:9870/
 
-   
-
 3. Make the HDFS directories required to execute MapReduce jobs:
 
    ```bash
@@ -261,42 +259,50 @@ The above commands sets me ready for execution. Now if I want to test my program
 
      or `hadoop dfs` will also work.
 
-4. Compile your WordCount.java
-   
-    cd to `/Users/lesley/Documents/USC/CSCI572/HW3/MY-MAPREDUCE/wordcount` where I store my java program
-    
-    ```bash
-    hadoop com.sun.tools.javac.Main WordCount.java
-    jar cf wc.jar WordCount*.class
-    ```
-
-5. Upload input data
+4. Upload input data
 
    ```bash
-   hadoop fs -put input /wordcount/input
+   hadoop fs -put input wordcount/input
+   ```
+
+5. Compile your WordCount.java
+
+   cd to `/Users/lesley/Documents/USC/CSCI572/HW3/MY-MAPREDUCE/wordcount` where I store my java program
+
+   ```bash
+   rm WordCount*.class wc.jar
+   
+   hadoop com.sun.tools.javac.Main WordCount.java
+   jar cf wc.jar WordCount*.class
    ```
 
 6. Run your WordCount job
-   
+
    ```bash
-   hadoop jar wc.jar WordCount /wordcount/input /wordcount/output
+   hadoop fs -rm -r wordcount/output
+   hadoop jar wc.jar WordCount wordcount/input wordcount/output
    ```
 
-7. View the results
+7. View the results (top 50)
 
    ```bash
-   hadoop fs -cat /user/lesley/wordcount/output/part-r-00000
-   
+   hadoop fs -cat wordcount/output/part-r-00000 | head -n 50
    ```
 
 ​	Or copy to local:
 
 ```bash
-hadoop fs -get /user/lesley/wordcount/output ./output
-cat output/part-r-00000
+hadoop fs -get wordcount/output ./output
+cat output/part-r-00000 | head -n 50
 ```
 
+8. Shutdown daemon
 
+   ```bash
+   sbin/stop-dfs.sh
+   ```
+
+   
 
 ### Explanation
 
