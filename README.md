@@ -10,9 +10,9 @@ To get a simplist project running, we follow the [official guide](https://hadoop
 
 **MacOS** installation guide:
 
-#### Install homebrew
+#### Step 1. Install homebrew
 
-#### Use homebrew to install hadoop
+#### Step 2. Use homebrew to install hadoop
 
 ```bash
 brew install hadoop
@@ -32,7 +32,7 @@ brew info hadoop
 
 If you used *homebrew*, it will be in somewhere like `/opt/homebrew/Cellar/hadoop/3.4.2` (3.4.2 is the version)
 
-##### Error Shooting
+##### Hadoop instalation Error Shooting
 
 I came across this installation failure:
 
@@ -53,7 +53,7 @@ brew link yarn  # Re-link yarn after if you still need it
 
 After I unlinked yarn, I decided to rename the js manager yarn to **js-yarn**. I don't like yarn anyways I prefer npm manager.
 
-##### Add path to environment
+##### Add Hadoop path to environment
 
 After installing hadoop I used command `[ -d "etc/hadoop" ] && echo "hadoop exist"` to check if my hadoop exists. But it echos nothing. I had to find where it is by `hadoop version` or `brew info hadoop` and decided to add the path to environment by editing `~/.zshrc`.
 
@@ -73,8 +73,11 @@ brew install pdsh
 ```
 
 > Heads up
+> 
 > For a single-node Hadoop setup on your Mac, you probably won't actually need pdsh.
+> 
 > **pdsh (Parallel Distributed Shell)** is used to execute commands on multiple machines simultaneously in a real distributed cluster. Since you're running everything on one machine (localhost), it's not really necessary for your setup.
+> 
 > But if the guide mentions it and you want to follow along completely, go ahead and install it with the command above. It won't hurt to have it installed even if you don't end up using it.
 
 ### 3. Java
@@ -272,25 +275,31 @@ cat output/part-r-00000
 ### Explanation
 
 1. My `WordCount.jav`a is local, when I do `hadoop com.sun.tools.javac.Main WordCount.java`, I use the javac tool in hadoop fs?
+   
     This uses the Java compiler (javac) that comes with **Hadoop**, but it compiles your local file. It's **NOT** using anything in HDFS. Think of it as:
     * **hadoop** = a wrapper script that sets up the Java classpath
     * **com.sun.tools.javac.Main** = the Java compiler
     * `**WordCount.java**` = your local file
     It's equivalent to running javac WordCount.java but with Hadoop's libraries in the classpath.
-2. Why do I get compiled `.class` files local under the same directory as my `WordCount.java` file? Shouldn't it be in hadoop fs?
-    Because you compiled a local file, the output goes to the local filesystem. The compiler reads from local, writes to local. HDFS is not involved at all in compilation.
-3. The command `jar cf wc.jar WordCount*.class` is completely local? **Yes.**
-4. When I run `hadoop jar wc.jar WordCount /wordcount/input /wordcount/output`, I am reading local `wc.jar` file and apply it to the files in hadoop fs directory /wordcount/input?
-   Now it gets interesting! This command:
 
-  Reads the local wc.jar file
-  Uploads it temporarily to the Hadoop cluster
-  Runs the MapReduce job
-  Reads input from HDFS: `/wordcount/input`
-  Writes output to HDFS: `/wordcount/output`
+2. Why do I get compiled `.class` files local under the same directory as my `WordCount.java` file? Shouldn't it be in hadoop fs?
+   
+    Because you compiled a local file, the output goes to the local filesystem. The compiler reads from local, writes to local. HDFS is not involved at all in compilation.
+3. The command `jar cf wc.jar WordCount*.class` is completely local? 
+    **Yes.**
+4. When I run `hadoop jar wc.jar WordCount /wordcount/input /wordcount/output`, I am reading local `wc.jar` file and apply it to the files in hadoop fs directory /wordcount/input?
+  
+  Now it gets interesting! This command:
+
+  * Reads the local wc.jar file
+  * Uploads it temporarily to the Hadoop cluster
+  * Runs the MapReduce job
+  * Reads input from HDFS: `/wordcount/input`
+  * Writes output to HDFS: `/wordcount/output`
 
 #### Visual Summary:
 
+```
 LOCAL FILESYSTEM:
 /Users/lesley/Documents/USC/CSCI572/HW3/wordcount/
 ├── WordCount.java          ← Your source code (local)
@@ -306,3 +315,4 @@ HDFS (Hadoop Distributed File System):
 └── output/                 ← MapReduce output (in HDFS)
     ├── part-r-00000
     └── _SUCCESS
+```
