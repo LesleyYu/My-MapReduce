@@ -349,3 +349,15 @@ HDFS (Hadoop Distributed File System):
     ├── part-r-00000
     └── _SUCCESS
 ```
+
+## Program Structure
+
+Folder wordcount1 contains:
+
+1. input: full dataset (77 files)
+2. `WordCount.java`: count unigrams and output **(word, docID:count)** pairs
+
+Folder wordcount2 contains:
+
+1. input: dev dataset (5 files)
+2. `WordCount.java`: count selected bigrams and output **(word1 word2, docID)** pairs
